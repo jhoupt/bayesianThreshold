@@ -12,34 +12,18 @@ parameters{  // Everything that has a prior distribution
    vector<lower=0,upper=1>[nSubj] lapse;        // Observer's lapse rate
    real mum;
    real muw;
-   vector[nLevels-1] fA;
+   #vector[nLevels-1] fA;
+   #vector[nSubj-1] sA;
+   #vector[nSubj-1] sB;
    vector[nSubj] sA;
    vector[nSubj] sB;
 }
 transformed parameters {
    real m[nSubj,nLevels];
    real<lower=0> w[nSubj,nLevels];
-   vector[nLevels] factorA;
    vector[nSubj] subjectA;
    vector[nSubj] subjectB;
 
-   if (nLevels > 2) {
-      #for (l in 1:(nLevels-1)) { 
-      #   # Uncomment for landolt C / shovel data
-      #   #factorA[l] <- fA[l]/10;
-      #   # Uncomment for simulated data
-      #   factorA[l] <- fA[l]*3;
-      #}
-      # Uncomment for landolt C / shovel data
-      #factorA[nLevels] <- -1*sum(fA)/10;
-      ## Uncomment for simulated data
-      #factorA[nLevels] <- -1*sum(fA)*3;
-      factorA <- 3*(fA - mean(fA));
-   }
-   else {
-      factorA[1] <- fA[1]/10;
-      factorA[2] <- -1*fA[1]/10;
-   }
 
    if (nSubj > 2) {
       #for (l in 1:(nSubj-1)) { 
@@ -61,7 +45,7 @@ transformed parameters {
 
    for (sj in 1:nSubj) {
       for (l in 1:nLevels) {
-         m[sj,l] <- mum + factorA[l]  + subjectA[sj];
+         m[sj,l] <- mum + subjectA[sj];
          w[sj,l] <- muw + subjectB[sj];
       }
    }
@@ -94,7 +78,6 @@ model {
       psi[tr] <- (1-lapse[ subject[tr] ])*( (1-chancePerformance)*inv_logit(4.4/width[tr] * (intensity[tr]-threshold[tr])) + chancePerformance) + chancePerformance*lapse[ subject[tr] ];
    }
 
-   fA ~ normal(0,1);
    sA ~ normal(0,1);
    sB ~ normal(0,1);
 
